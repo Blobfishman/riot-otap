@@ -16,11 +16,16 @@ static const shell_command_t commands[] = {
 
 int main(void) {
 
+    char ipv6[26];
+    printf("Enter Ipv6 adress:");
+    fgets(ipv6, 26, stdin);
+
+
     thread_create(server_stack_note, sizeof(server_stack_note),
                     THREAD_PRIORITY_MAIN - 1,
                     THREAD_CREATE_STACKTEST,
                     receive_data,
-                    NULL, "receive_data");
+                    ipv6, "receive_data");
 
     thread_create(server_stack_pc, sizeof(server_stack_pc),
                     THREAD_PRIORITY_MAIN - 1,

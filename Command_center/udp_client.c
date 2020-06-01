@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 	int sockfd; 
 	char buffer[SIZE];  
 	struct sockaddr_in6	 servaddr;
-	if(argc != 2) {
+	if(argc != 3) {
 	 printf("please enter with ipv6 adress of the remote");	
 	 return -1;
 	}
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 	int n, len; 
 	
 	
-	sendto(sockfd, "10", strlen("10"), 
+	sendto(sockfd, argv[2], strlen(argv[2]), 
 		MSG_DONTWAIT, (const struct sockaddr *) &servaddr, 
 			sizeof(servaddr)); 
 
