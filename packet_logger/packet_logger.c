@@ -1,25 +1,3 @@
-/*
- * Copyright (C) 2015-18 Freie Universität Berlin
- *
- * This file is subject to the terms and conditions of the GNU Lesser
- * General Public License v2.1. See the file LICENSE in the top level
- * directory for more details.
- */
-
-/**
- * @defgroup    app_sniffer
- * @brief       Sniffer application based on the new network stack
- * @{
- *
- * @file
- * @brief       Sniffer application for RIOT
- *
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
- * @author      Martine Lenders <m.lenders@fu-berlin.de>
- *
- * @}
- */
-
 #include <stdio.h>
 
 #include "fmt.h"
@@ -114,20 +92,23 @@ void *rawdump(void *arg)
 }
 
 /**
- * @brief   Maybe you are a golfer?!
+ * @brief
  */
 int main(void)
 {
+
+    /* v This part should be copied into every client and server main v */
+
     gnrc_netreg_entry_t dump;
 
-    puts("RIOT sniffer application");
-
-    /* start and register rawdump thread */
-    puts("Run the rawdump thread and register it");
     dump.target.pid = thread_create(rawdmp_stack, sizeof(rawdmp_stack), RAWDUMP_PRIO,
                                     THREAD_CREATE_STACKTEST, rawdump, NULL, "rawdump");
     dump.demux_ctx = GNRC_NETREG_DEMUX_CTX_ALL;
     gnrc_netreg_register(GNRC_NETTYPE_UNDEF, &dump);
+
+    /* ^ This part should be copied into every client and server main ^ */
+
+    puts("All your packets are belong to us");
 
     /* start the shell */
     puts("All ok, starting the shell now");
