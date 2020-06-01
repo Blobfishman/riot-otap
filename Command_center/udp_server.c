@@ -8,7 +8,7 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
 
-#define PORT	 6666
+#define PORT	 5555
 #define SIZE 1024 
 
 // Driver code 
