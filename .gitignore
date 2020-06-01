@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# bin and tags
+Client/bin/*
+tags
