@@ -1,3 +1,6 @@
 [submodule "RIOT"]
 	path = RIOT
 	url = https://github.com/RIOT-OS/RIOT
+[submodule "desvirt"]
+	path = desvirt
+	url = https://github.com/des-testbed/desvirt.git
