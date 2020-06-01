@@ -34,3 +34,7 @@
 # bin and tags
 Client/bin/*
 tags
+#cland config
+Client/.clangd/
+Client/CMakeFiles/
+Client/compile_commands.json

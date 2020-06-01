@@ -1,14 +1,19 @@
 #include <stdio.h>
-#include <string.h>
+// #include <string.h>
 
 #include "net/ipv6/addr.h"
 #include "net/sock/udp.h"
 #include "xtimer.h"
+#include "fmt.h" 
+
+extern void print_ipv6(void);
+
 
 static char client_stack[THREAD_STACKSIZE_DEFAULT];
 // buffer fuer die empfangenen daten
 static char data_buffer[128];
 static char buf[128];
+static char client_buffer[128];
 static uint16_t server_port = 8888;
 static uint16_t client_port = 7777;
 
@@ -31,7 +36,7 @@ int udp_send(int argc, char **argv) {
     }
     // lokale addresse IPV6 und server port
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
-    local.port = client_port;
+    local.port = 6666;
 
     //sock structur deklarieren
     sock_udp_t sock;
@@ -110,13 +115,12 @@ void *udp_client(void *arg) {
         data = app();
         if (sock_udp_send(&sock, &data, sizeof(data), &router) < 0) {
             puts("Error sending message");
-            sock_udp_close(&sock);
             return NULL;
         }
-        if ((res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC,
+        if ((res = sock_udp_recv(&sock, client_buffer, sizeof(client_buffer), 1 * US_PER_SEC,
                                 NULL)) < 0) {
             if (res == -ETIMEDOUT) {
-                puts("Timed out");
+                puts("Timed out client");
             }
             else {
                 puts("Error receiving message");
@@ -125,7 +129,7 @@ void *udp_client(void *arg) {
         else {
             printf("Received message: \"");
             for (int i = 0; i < res; i++) {
-                printf("%c", buf[i]);
+                printf("%c", client_buffer[i]);
             }
             printf("\"\n");
         }
@@ -171,11 +175,12 @@ void *udp_server(void *arg) {
             // client starten oder update simulieren
             if(atoi(data_buffer) == 10) {
                 puts("starte Client");
-                
                 app = &app1;
                 // router ip und port setzen
                 router = remote;
-                router.port = server_port;
+                char ipv6_addr[IPV6_ADDR_MAX_STR_LEN];
+                ipv6_addr_to_str(ipv6_addr,(ipv6_addr_t *)&local.addr.ipv6, IPV6_ADDR_MAX_STR_LEN);
+                printf("my addr: %s\n", ipv6_addr);
 
                 thread_create(client_stack, sizeof(client_stack),
                                 THREAD_PRIORITY_MAIN - 1,
@@ -201,5 +206,10 @@ void *udp_server(void *arg) {
 
 
     return NULL;
+}
+
+void print_ipv6(void) {
+    print_byte_hex(*router.addr.ipv6);
+    puts("\n");
 }
 
