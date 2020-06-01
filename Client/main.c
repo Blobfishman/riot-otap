@@ -6,13 +6,7 @@
 
 static char server_stack[THREAD_STACKSIZE_DEFAULT];
 
-extern int udp_send(int argc, char **argv);
 extern void *udp_server(void *arg);
-
-static const shell_command_t commands[] = {
-    {"udp_send", "send a message", udp_send},
-    { NULL, NULL, NULL }
-};
 
 int main(void) {
 
@@ -23,7 +17,7 @@ int main(void) {
                     NULL, "udp_server");
     
     char line_buf[SHELL_DEFAULT_BUFSIZE];
-    shell_run(commands, line_buf, SHELL_DEFAULT_BUFSIZE);
+    shell_run(NULL, line_buf, SHELL_DEFAULT_BUFSIZE);
 
     return 0;
 }

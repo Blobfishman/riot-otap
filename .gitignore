@@ -32,9 +32,9 @@
 *.app
 
 # bin and tags
-Client/bin/*
+*/bin/*
 tags
 #cland config
-Client/.clangd/
-Client/CMakeFiles/
-Client/compile_commands.json
+*/.clangd/
+*/CMakeFiles/
+*/compile_commands.json
