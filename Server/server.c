@@ -32,26 +32,31 @@ static uint16_t pc_client_port = 5555;
 //Method to send Data to the pc
 int send_data_to_pc(int res)
 {
-    sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
-    local.port = pc_client_port;
+    sock_udp_ep_t remote = { .family = AF_INET6 };
+   char * adresse = "fe80::70c4:aff:feb0:a637";
+   ipv6_addr_from_str((ipv6_addr_t*) &remote.addr, adresse);
+    if (ipv6_addr_is_link_local((ipv6_addr_t *)&remote.addr)) {
+    /* choose first interface when address is link local */
+    	gnrc_netif_t *netif = gnrc_netif_iter(NULL);
+    	remote.netif = (uint16_t)netif->pid;
+    }
+    remote.port = pc_client_port;
 
     //sock structur deklarieren
     sock_udp_t sock;
-    if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
+    if (sock_udp_create(&sock, &remote, NULL, 0) < 0) {
         puts("Error creating UDP sock to send data to pc");
         return 1;
     }
 
-    for(int i = 0; i < res; i++)
-    {
-        if (sock_udp_send(&sock, &buf[i], sizeof(buf[i]), NULL) < 0) 
+        if (sock_udp_send(&sock, pc_buf, res, &remote) < 0)
         {
         puts("Error sending message to pc");
         //sock_udp_close(&sock);
         return 1;
         }
-    }
-
+    sock_udp_close(&sock);
+    puts("Send message\n");
     return 0;
 
 }
@@ -71,17 +76,17 @@ int send_update(int res)
     }
 
 
-    
+
     ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6,
                                     IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
 
-    
+
     //send Data to the end-point
 
 
     for(int i = 0; i < res; i++)
     {
-        if (sock_udp_send(&sock, &pc_buf[i], sizeof(pc_buf[i]), NULL) < 0) 
+        if (sock_udp_send(&sock, &pc_buf[i], sizeof(pc_buf[i]), NULL) < 0)
         {
         puts("Error sending update to Nodes");
         //sock_udp_close(&sock);
@@ -99,7 +104,7 @@ int send_update(int res)
 
 
 
-//Method to receive Data from Nodes 
+//Method to receive Data from Nodes
 void *receive_data(void *arg)
 {
     puts("Udp_Server start for Nodes");
@@ -164,14 +169,8 @@ int *receive_update(void *arg)
             puts("Received a message");
 
 
-            send_update(res);
+            send_data_to_pc(res);
 
-
-            if (sock_udp_send(&sock, buf, res, &remote) < 0) {
-                puts("Error sending reply");
-                return NULL;
-            }
         }
     }
 }
-
