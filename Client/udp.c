@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "net/ipv6/addr.h"
@@ -15,10 +16,10 @@ uint16_t client_port = 7777;
 
 sock_udp_ep_t router;
 
-extern int app1(void);
-extern int app2(void);
+extern char app1(void);
+extern char app2(void);
 
-int (*app)(void);
+char (*app)(void);
 
 void *udp_client(void *arg) {
     
@@ -36,10 +37,11 @@ void *udp_client(void *arg) {
         return NULL;
     }
     
-    int data = 0;
+    char data = 0;
     while (1) {
         ssize_t res;
         data = app();
+        
         if (sock_udp_send(&sock, &data, sizeof(data), &router) < 0) {
             puts("Error sending message");
             return NULL;
@@ -105,6 +107,7 @@ void *udp_server(void *arg) {
                 app = &app1;
                 // router ip und port setzen
                 router = remote;
+                router.port = server_port;
 
                 thread_create(client_stack, sizeof(client_stack),
                                 THREAD_PRIORITY_MAIN - 1,
