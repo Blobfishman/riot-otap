@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 	int n, len; 
 	
 	
-	sendto(sockfd, (const char *)"hello", strlen("hello"), 
+	sendto(sockfd, "10", strlen("10"), 
 		MSG_DONTWAIT, (const struct sockaddr *) &servaddr, 
 			sizeof(servaddr)); 
 
