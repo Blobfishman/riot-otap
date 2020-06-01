@@ -9,12 +9,12 @@
             </nodeType>
         </nodeTypes>
         <nodes>
-            <node binary="./gateway" name="g1" type="riot_native"/>
-            <node binary="./client" name="c1" type="riot_native"/>
-            <node binary="./client" name="c2" type="riot_native"/>
-            <node binary="./client" name="c3" type="riot_native"/>
-            <node binary="./client" name="c4" type="riot_native"/>
-            <node binary="./client" name="c5" type="riot_native"/>
+            <node binary="../Server/bin/native/Server.elf" name="g1" type="riot_native"/>
+            <node binary="../Client/bin/native/Client.elf" name="c1" type="riot_native"/>
+            <node binary="../Client/bin/native/Client.elf" name="c2" type="riot_native"/>
+            <node binary="../Client/bin/native/Client.elf" name="c3" type="riot_native"/>
+            <node binary="../Client/bin/native/Client.elf" name="c4" type="riot_native"/>
+            <node binary="../Client/bin/native/Client.elf" name="c5" type="riot_native"/>
         </nodes>
         <links>
             <link broadcast_loss="0.0" from_if="radio0" from_node="g1" loss="0.0" to_if="radio0" to_node="c1" uni="false"/>
