@@ -24,7 +24,7 @@ int main() {
 		return -1; 
 	} 
 
-	memset(&server_addr, 0, sizeof(local_addr));	
+	memset(&local_addr, 0, sizeof(local_addr));	
 	//set up local address	
 	local_addr.sin6_family = AF_INET6;  
 	local_addr.sin6_port = htons(PORT); 
@@ -43,7 +43,7 @@ int main() {
 
 	while(1) {
 		//wait for message
-		int size  = recvfrom(socketfd, (char *)buffer, MAXLINE, 
+		int size  = recvfrom(socketfd, (char *)buffer, SIZE, 
 				MSG_WAITALL, ( struct sockaddr *) &remote_addr, 
 				&len);
 		if (size < 0 ) {
