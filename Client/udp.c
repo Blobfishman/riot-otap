@@ -58,6 +58,8 @@ int udp_send(int argc, char **argv) {
         puts("Error: unable to parse destination address");
         return 1;
     }
+
+    
     if (ipv6_addr_is_link_local((ipv6_addr_t *)&remote.addr)) {
         /* choose first interface when address is link local */
         puts("address ist link local ?!");
