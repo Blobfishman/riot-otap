@@ -1,9 +1,9 @@
 all:
-	cd ./Client/ && make
-	cd ./Server/ && make
-	cd ./Command_center/ && make all
+	cd ./node/ && make
+	cd ./gateway/ && make
+	cd ./command_center/ && make all
 
 clean:
-	cd ./Client/ && make clean
-	cd ./Server/ && make clean
-	cd ./Command_center/ && make clean
+	cd ./node/ && make clean
+	cd ./gateway/ && make clean
+	cd ./command_center/ && make clean

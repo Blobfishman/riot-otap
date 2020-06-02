@@ -30,23 +30,23 @@ desvirt-check-topo-args: desvirt-check
     endif
 
 desvirt-define: desvirt-check-topo-file
-	cd $(TOOL_DIR) && ./vnet -d $(ROOT_PATH)/testing/ -n $(basename $(TOPO))
+	$(TOOL_DIR)vnet -d $(ROOT_PATH)testing/ -n $(basename $(TOPO))
 
 desvirt-undefine: desvirt-check-topo-file
-	cd $(TOOL_DIR) && ./vnet -u $(ROOT_PATH)/testing/ -n $(basename $(TOPO))
+	$(TOOL_DIR)vnet -u $(ROOT_PATH)testing/ -n $(basename $(TOPO))
 
 desvirt-start: desvirt-check-topo-file
-	cd $(TOOL_DIR) && ./vnet -s -n $(basename $(TOPO))
+	$(TOOL_DIR)vnet -s -n $(basename $(TOPO))
 
 desvirt-stop: desvirt-check-topo-file
-	cd $(TOOL_DIR) && ./vnet -q -n $(basename $(TOPO))
+	$(TOOL_DIR)vnet -q -n $(basename $(TOPO))
 
 desvirt-topology: desvirt-check-topo-args all
 	cd $(TOOL_DIR) && \
 	./topology_creator -e $(ELFFILE) -n riot_native -r ieee802154 -s$(TOPO_SIZE) -t$(TOPO_TYPE) -f $(TOPO_TYPE)$(TOPO_SIZE)
 
 desvirt-list: desvirt-check
-	cd $(TOOL_DIR) && ./vnet -l
+	$(TOOL_DIR)vnet -l
 
 desvirt-clean::
 

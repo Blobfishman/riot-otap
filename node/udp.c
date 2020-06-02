@@ -9,7 +9,7 @@
 
 static char client_stack[THREAD_STACKSIZE_DEFAULT];
 // buffer fuer die empfangenen daten
-uint8_t server_buffer[128];
+char server_buffer[512];
 uint8_t client_buffer[128];
 uint16_t server_port = 8888;
 uint16_t client_port = 7777;
@@ -70,8 +70,14 @@ void* udp_server(void* arg)
 {
 
     puts("start udp_server");
-
+    bool running = false;
     (void)arg;
+
+    // need to receive update
+    int packets = 0;
+    int received = 0;
+    FILE *newfp;
+
     // lokale addresse IPV6 und server port
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
     local.port = server_port;
@@ -88,25 +94,16 @@ void* udp_server(void* arg)
     while (true) {
         // addresse vom sender
         sock_udp_ep_t remote;
-
+        size_t res;
         // empfange pakete
-        if (sock_udp_recv(&sock, server_buffer, sizeof(server_buffer),
+        if ((res = sock_udp_recv(&sock, server_buffer, sizeof(server_buffer),
                 SOCK_NO_TIMEOUT,
-                &remote)
-            >= 0) {
-            //Nachricht printen
-            printf("Message von erhalten: %s\n", server_buffer);
-
-            // gleiche nachricht zurueck schicken (nachher aendern)
-            if (sock_udp_send(&sock, "server acc", sizeof("server acc"),
-                    &remote)
-                < 0) {
-                puts("Error sending reply");
-            }
-
+                &remote))
+            > 0) {
             // client starten oder update simulieren
-            if (atoi((char*)server_buffer) == 10) {
+            if (atoi((char*)server_buffer) == 10 && !running) {
                 puts("starte Client");
+                running = true;
                 app = &app1;
                 // router ip und port setzen
                 router = remote;
@@ -117,14 +114,52 @@ void* udp_server(void* arg)
                     THREAD_CREATE_STACKTEST,
                     udp_client,
                     NULL, "udp_client");
-            }
-            if (atoi((char*)server_buffer) == 20) {
+            } else {
                 puts("update");
+
+                //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                 if (app == &app1) {
                     app = &app2;
                 } else {
                     app = &app1;
                 }
+                //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                
+                newfp = fopen("update.elf","wb");
+
+                if(newfp==NULL)
+                {
+                    printf("error opening the file\n");
+                    return 0;
+                }
+
+
+                packets = atoi(server_buffer);
+                printf("Num packets expected: %d\n", packets);
+
+                while(received<packets)
+                {
+                    size_t res2 = sock_udp_recv(&sock, server_buffer, sizeof(server_buffer) , SOCK_NO_TIMEOUT, &remote);
+
+                    if (res2 <= 0)
+                    {
+                        printf("Failed to get Data from file");
+                        return 0;
+                    }
+
+                    if((fwrite(server_buffer,1,res2,newfp)) < res2)
+                    {
+                        printf("error in writing to the file\n");
+                        return 0;
+                    }
+                    printf("%d\n",received);
+                    received++;
+                }
+
+                printf("Got the data from the server\n");
+
+                fclose(newfp);
+
             }
         } else {
             puts("Error beim empfangen");
