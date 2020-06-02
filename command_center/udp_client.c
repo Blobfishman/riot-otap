@@ -11,17 +11,32 @@
 #include <unistd.h>
 
 #define PORT 6666
-#define SIZE 1024
-int main(int argc, char* argv[])
-{
+#define SIZE 500
 
+
+int main(int argc, char* argv[])
+{     
+    if (argc != 3) {
+    	printf("Usage: ./client <ipv6-adress-node> <interface-name> <abs-path-to-update>");
+        return -1;
+    }
+     //open file
+     FILE * fptr = fopen(argv[3], "rb");
+     
+     if(fptr == NULL) {
+     	printf("Error opening file");
+	return -1;
+     }
+     //calculate how many packets to be send
+     fseek(fptr,0, SEEK_END);
+     size_t file_size = ftell(fptr);
+     fseek(fptr,0, SEEK_SET);
+     int packets = (file_size/500) +1;
+
+    
     int sockfd;
     char buffer[SIZE];
     struct sockaddr_in6 servaddr;
-    if (argc != 3) {
-        printf("please enter with ipv6 adress of the remote");
-        return -1;
-    }
 
     // socket creation
     if ((sockfd = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
@@ -29,11 +44,11 @@ int main(int argc, char* argv[])
         return -1;
     }
     //bind socket to interface
-    const char* opt = "tapbr0";
-    if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, opt, strlen(opt)) < 0) {
+    const char* interface_name = argv[3];
+    if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen(interface_name)) < 0) {
         perror("Binding to interface failed,try to run as root");
     }
-    //allocate space for addr
+    //errase memory
     memset(&servaddr, 0, sizeof(servaddr));
 
     char* ip = argv[1];
@@ -45,11 +60,32 @@ int main(int argc, char* argv[])
     servaddr.sin6_family = AF_INET6;
     servaddr.sin6_port = htons(PORT);
     int n, len;
-
-    sendto(sockfd, argv[2], strlen(argv[2]),
-        MSG_DONTWAIT, (const struct sockaddr*)&servaddr,
+    
+    //send amount of packets to client
+    sprintf(buffer, "%d",packets);
+    sendto(sockfd,buffer, SIZE,
+        0, (const struct sockaddr*)&servaddr,
         sizeof(servaddr));
+    //clear buffer
+    memset(buffer, 0, SIZE);
+    
+   //read and send file 
+   while(!feof(fptr)) {
+    	int byte_read =	fread(buffer,1,SIZE,fptr);
+    	if(byte_read != SIZE) {
+   		if(!feof(fptr)) {
+		printf("Reading failed!!");
+		return -1;
+		}	 
+    	}
+	//send chuncked packets
+	sendto(sockfd,buffer, byte_read,
+        0, (const struct sockaddr*)&servaddr,
+        sizeof(servaddr));
+    	
+    }
 
     close(sockfd);
+    fclose(fptr);
     return 0;
 }
