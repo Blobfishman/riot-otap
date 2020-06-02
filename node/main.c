@@ -4,6 +4,10 @@
 #include "shell.h"
 #include "thread.h"
 
+//#include "flashwrite.h"
+//#include "hdr.h"
+//#include "slot.h"
+
 #include "packet_logger.h"
 
 static char server_stack[THREAD_STACKSIZE_DEFAULT];
