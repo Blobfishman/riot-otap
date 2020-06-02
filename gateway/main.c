@@ -7,33 +7,32 @@
 static char server_stack_note[THREAD_STACKSIZE_DEFAULT];
 static char server_stack_pc[THREAD_STACKSIZE_DEFAULT];
 
-extern void *receive_data(void *arg);
-extern void *receive_update(void *arg);
+extern void* receive_data(void* arg);
+extern void* receive_update(void* arg);
 
 static const shell_command_t commands[] = {
     { NULL, NULL, NULL }
 };
 
-int main(void) {
+int main(void)
+{
 
     char ipv6[26];
     printf("Enter Ipv6 adress:");
     fgets(ipv6, 26, stdin);
 
-
     thread_create(server_stack_note, sizeof(server_stack_note),
-                    THREAD_PRIORITY_MAIN - 1,
-                    THREAD_CREATE_STACKTEST,
-                    receive_data,
-                    ipv6, "receive_data");
+        THREAD_PRIORITY_MAIN - 1,
+        THREAD_CREATE_STACKTEST,
+        receive_data,
+        ipv6, "receive_data");
 
     thread_create(server_stack_pc, sizeof(server_stack_pc),
-                    THREAD_PRIORITY_MAIN - 1,
-                    THREAD_CREATE_STACKTEST,
-                    receive_update,
-                    NULL, "receive_update");
+        THREAD_PRIORITY_MAIN - 1,
+        THREAD_CREATE_STACKTEST,
+        receive_update,
+        NULL, "receive_update");
 
-    
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 
