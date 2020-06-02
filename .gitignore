@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# bin and tags
+*/bin/*
+tags
+#cland config
+*/.clangd/
+*/CMakeFiles/
+*/compile_commands.json
