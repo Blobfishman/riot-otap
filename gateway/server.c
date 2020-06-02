@@ -38,7 +38,7 @@ int send_data_to_pc(int res)
     
     server.port = pc_server_port;
 
-    //sock structur deklarieren
+
     sock_udp_t sock;
     if (sock_udp_create(&sock, &server, NULL, 0) < 0) {
         puts("Error creating UDP sock to send data to pc");
@@ -59,8 +59,10 @@ int send_data_to_pc(int res)
 
 
 //send update via Multicast to all nodes
-int send_update(int res)
+int send_update(void* arg)
 {
+    (void) arg;
+
     sock_udp_ep_t remote = { .family = AF_INET6 };
     sock_udp_t sock;
     remote.port = client_multicast_port;
@@ -72,13 +74,70 @@ int send_update(int res)
 
     ipv6_addr_set_all_nodes_multicast((ipv6_addr_t*)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
 
-    if (sock_udp_send(&sock, pc_buf, res, &remote) < 0) {
-        puts("Error sending update to Nodes");
-        //sock_udp_close(&sock);
+    char buffer[512];
+
+    FILE * fptr = fopen("Update.elf", "rb");
+     
+     if(fptr == NULL) {
+     	printf("Error opening file");
+	return -1;
+    }
+
+    fseek(fptr,0, SEEK_END);
+    size_t file_size = ftell(fptr);
+    fseek(fptr,0, SEEK_SET);
+
+    int packets = 0;
+
+    if ((file_size/512) % 2 == 0) 
+    {
+        packets = (file_size/512);
+    }
+    else {
+        packets = (file_size/512) +1;
+    }
+
+    if (sock_udp_send(&sock, &packets, sizeof(&packets), &remote) < 0) 
+    {
+        puts("Error sending message");
         sock_udp_close(&sock);
         return 1;
     }
 
+    memset(buffer, 0, 512);
+
+     //read and send file 
+   while(!feof(fptr)) {
+    	int byte_read =	fread(buffer,1,512,fptr);
+    	if(byte_read != 512) {
+   		if(!feof(fptr)) {
+		printf("Reading failed!!");
+		return -1;
+		}	 
+    	}
+        
+       
+        usleep(4200);
+
+    if(byte_read > 0)
+    {
+
+	//send chuncked packets
+
+     if (sock_udp_send(&sock, buffer, sizeof(buffer), &remote) < 0) 
+    {
+        puts("Error sending chunked packages");
+        sock_udp_close(&sock);
+        return 1;
+    }
+
+
+    	
+    }
+   }
+
+    fclose(fptr);
+    
     sock_udp_close(&sock);
     return 0;
 }
@@ -100,6 +159,17 @@ void* receive_data(void* arg)
         puts("Error creating UDP sock for nodes");
         return NULL;
     }
+
+    sock_udp_ep_t nodes = { .family = AF_INET6 };
+    nodes.port = client_multicast_port;
+    ipv6_addr_set_all_nodes_multicast((ipv6_addr_t*)&nodes.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
+
+        if (sock_udp_send(&sock, "10", sizeof("10"), &nodes) < 0) {
+            puts("Error sending message");
+            sock_udp_close(&sock);
+            return 0;
+        }
+
 
     while (1) {
         sock_udp_ep_t remote;
@@ -161,6 +231,9 @@ int* receive_update(void* arg)
                     return 0;
                 }
 
+                packets = 0;
+                received = 0;
+
 
                 packets = atoi(pc_buf);
                 printf("Num packets expected: %d\n", packets);
@@ -187,6 +260,8 @@ int* receive_update(void* arg)
                 printf("Got the data from the pc\n");
 
                 fclose(newfp);
+
+                send_update(arg);
 
             }   
         }   
