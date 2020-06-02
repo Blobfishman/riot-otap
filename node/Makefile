@@ -6,6 +6,8 @@ BOARD ?= native
 
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../RIOT
+EXTERNAL_MODULE_DIRS += $(CURDIR)/../packet_logger
+INCLUDES += -I$(CURDIR)/../packet_logger
 
 # Comment this out to disable code in RIOT that does safety checking
 # which is not needed in a production environment but helps in the
@@ -26,5 +28,8 @@ USEMODULE += auto_init_gnrc_netif
 USEMODULE += gnrc_ipv6_router_default
 USEMODULE += gnrc_icmpv6_echo
 USEMODULE += gnrc_sock_udp
+
+USEMODULE += packet_logger
+
 
 include $(RIOTBASE)/Makefile.include
