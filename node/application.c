@@ -1,10 +1,12 @@
-#include <stdio.h>
 #include "xtimer.h"
+#include <stdio.h>
 
-char app1(void) {
+char app1(void)
+{
     return '1';
 }
 
-char app2(void) {
+char app2(void)
+{
     return '2';
 }

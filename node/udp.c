@@ -1,11 +1,11 @@
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "net/ipv6/addr.h"
 #include "net/sock/udp.h"
 #include "xtimer.h"
-// #include "fmt.h" 
+// #include "fmt.h"
 
 static char client_stack[THREAD_STACKSIZE_DEFAULT];
 // buffer fuer die empfangenen daten
@@ -21,8 +21,9 @@ extern char app2(void);
 
 char (*app)(void);
 
-void *udp_client(void *arg) {
-    
+void* udp_client(void* arg)
+{
+
     (void)arg;
 
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
@@ -36,26 +37,25 @@ void *udp_client(void *arg) {
         puts("Error: sock konnte nicht erstellt werden");
         return NULL;
     }
-    
+
     char data = 0;
     while (1) {
         ssize_t res;
         data = app();
-        
+
         if (sock_udp_send(&sock, &data, sizeof(data), &router) < 0) {
             puts("Error sending message");
             return NULL;
         }
         if ((res = sock_udp_recv(&sock, client_buffer, sizeof(client_buffer), 1 * US_PER_SEC,
-                                NULL)) < 0) {
+                 NULL))
+            < 0) {
             if (res == -ETIMEDOUT) {
                 puts("Timed out client");
-            }
-            else {
+            } else {
                 puts("Error receiving message");
             }
-        }
-        else {
+        } else {
             printf("Received message: \"");
             for (int i = 0; i < res; i++) {
                 printf("%c", client_buffer[i]);
@@ -66,8 +66,9 @@ void *udp_client(void *arg) {
     }
 }
 
-void *udp_server(void *arg) {
-    
+void* udp_server(void* arg)
+{
+
     puts("start udp_server");
 
     (void)arg;
@@ -88,21 +89,23 @@ void *udp_server(void *arg) {
         // addresse vom sender
         sock_udp_ep_t remote;
 
-        // empfange pakete 
-        if (sock_udp_recv(&sock, server_buffer, sizeof(server_buffer), 
-                                                SOCK_NO_TIMEOUT,
-                                                &remote) >= 0) {
+        // empfange pakete
+        if (sock_udp_recv(&sock, server_buffer, sizeof(server_buffer),
+                SOCK_NO_TIMEOUT,
+                &remote)
+            >= 0) {
             //Nachricht printen
             printf("Message von erhalten: %s\n", server_buffer);
 
             // gleiche nachricht zurueck schicken (nachher aendern)
             if (sock_udp_send(&sock, "server acc", sizeof("server acc"),
-                                 &remote) < 0) {
+                    &remote)
+                < 0) {
                 puts("Error sending reply");
             }
 
             // client starten oder update simulieren
-            if(atoi((char*)server_buffer) == 10) {
+            if (atoi((char*)server_buffer) == 10) {
                 puts("starte Client");
                 app = &app1;
                 // router ip und port setzen
@@ -110,28 +113,23 @@ void *udp_server(void *arg) {
                 router.port = server_port;
 
                 thread_create(client_stack, sizeof(client_stack),
-                                THREAD_PRIORITY_MAIN - 1,
-                                THREAD_CREATE_STACKTEST,
-                                udp_client,
-                                NULL, "udp_client");
-
+                    THREAD_PRIORITY_MAIN - 1,
+                    THREAD_CREATE_STACKTEST,
+                    udp_client,
+                    NULL, "udp_client");
             }
-            if(atoi((char*)server_buffer) == 20) {
+            if (atoi((char*)server_buffer) == 20) {
                 puts("update");
-                if(app == &app1) {
+                if (app == &app1) {
                     app = &app2;
-                }
-                else {
+                } else {
                     app = &app1;
                 }
             }
-        }
-        else {
+        } else {
             puts("Error beim empfangen");
         }
     }
 
-
     return NULL;
 }
-
