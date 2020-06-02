@@ -1,26 +1,4 @@
-#include <stdio.h>
-
-#include "fmt.h"
-#include "thread.h"
-#include "xtimer.h"
-#include "shell.h"
-#include "shell_commands.h"
-#include "net/gnrc.h"
-
-/**
- * @brief   Buffer size used by the shell
- */
-#define SHELL_BUFSIZE           (64U)
-
-/**
- * @brief   Priority of the RAW dump thread
- */
-#define RAWDUMP_PRIO            (THREAD_PRIORITY_MAIN - 1)
-
-/**
- * @brief   Message queue size of the RAW dump thread
- */
-#define RAWDUMP_MSG_Q_SIZE      (32U)
+#include "packet_logger.h"
 
 /**
  * @brief   Stack for the raw dump thread
@@ -91,29 +69,10 @@ void *rawdump(void *arg)
     return NULL;
 }
 
-/**
- * @brief
- */
-int main(void)
-{
-
-    /* v This part should be copied into every client and server main v */
-
-    gnrc_netreg_entry_t dump;
-
-    dump.target.pid = thread_create(rawdmp_stack, sizeof(rawdmp_stack), RAWDUMP_PRIO,
+void enable_packet_logging(gnrc_netreg_entry_t gnrc_entry) {
+    gnrc_entry.target.pid = thread_create(rawdmp_stack, sizeof(rawdmp_stack), RAWDUMP_PRIO,
                                     THREAD_CREATE_STACKTEST, rawdump, NULL, "rawdump");
-    dump.demux_ctx = GNRC_NETREG_DEMUX_CTX_ALL;
-    gnrc_netreg_register(GNRC_NETTYPE_UNDEF, &dump);
-
-    /* ^ This part should be copied into every client and server main ^ */
-
-    puts("All your packets are belong to us");
-
-    /* start the shell */
-    puts("All ok, starting the shell now");
-    char line_buf[SHELL_DEFAULT_BUFSIZE];
-    shell_run(NULL, line_buf, SHELL_DEFAULT_BUFSIZE);
-
-    return 0;
+    gnrc_entry.demux_ctx = GNRC_NETREG_DEMUX_CTX_ALL;
+    gnrc_netreg_register(GNRC_NETTYPE_UNDEF, &gnrc_entry);
 }
+
