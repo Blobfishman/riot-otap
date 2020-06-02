@@ -11,37 +11,41 @@ extern int app2(void);
 int (*app)(void);
 
 //buffer for the messages
-uint8_t buf[128];
-uint8_t pc_buf[128];
+uint8_t buf[512];
+char pc_buf[512];
+
+int packets = 0;
+int received = 0;
+
+FILE *newfp;
 
 //ports for the nodes and the pc
 static uint16_t server_port = 8888;
 static uint16_t client_multicast_port = 8888;
 
-static uint16_t pc_server_port = 6666;
-static uint16_t pc_client_port = 5555;
+static uint16_t pc_server_port = 5555;
+static uint16_t pc_client_port = 6666;
+
+bool connection_to_pc = false;
+
+sock_udp_ep_t server;
+
+
 
 //Method to send Data to the pc
-int send_data_to_pc(char* arg, int res)
+int send_data_to_pc(int res)
 {
-    sock_udp_ep_t remote = { .family = AF_INET6 };
-    char* adresse = arg;
-    ipv6_addr_from_str((ipv6_addr_t*)&remote.addr, adresse);
-    if (ipv6_addr_is_link_local((ipv6_addr_t*)&remote.addr)) {
-        /* choose first interface when address is link local */
-        gnrc_netif_t* netif = gnrc_netif_iter(NULL);
-        remote.netif = (uint16_t)netif->pid;
-    }
-    remote.port = pc_client_port;
+    
+    server.port = pc_server_port;
 
     //sock structur deklarieren
     sock_udp_t sock;
-    if (sock_udp_create(&sock, &remote, NULL, 0) < 0) {
+    if (sock_udp_create(&sock, &server, NULL, 0) < 0) {
         puts("Error creating UDP sock to send data to pc");
         return 1;
     }
 
-    if (sock_udp_send(&sock, buf, res, &remote) < 0) {
+    if (sock_udp_send(&sock, buf, res, &server) < 0) {
         puts("Error sending message to pc");
         //sock_udp_close(&sock);
         return 1;
@@ -51,6 +55,8 @@ int send_data_to_pc(char* arg, int res)
     puts("Send message\n");
     return 0;
 }
+
+
 
 //send update via Multicast to all nodes
 int send_update(int res)
@@ -77,9 +83,13 @@ int send_update(int res)
     return 0;
 }
 
+
+
+
 //Method to receive Data from Nodes
 void* receive_data(void* arg)
 {
+    (void) arg;
     puts("Udp_Server start for Nodes");
 
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
@@ -94,22 +104,28 @@ void* receive_data(void* arg)
     while (1) {
         sock_udp_ep_t remote;
         ssize_t res;
-        if ((res = sock_udp_recv(&sock, buf, sizeof(buf) - 1, SOCK_NO_TIMEOUT, &remote)) > 0) {
+        if ((res = sock_udp_recv(&sock, buf, sizeof(buf) , SOCK_NO_TIMEOUT, &remote)) > 0) {
             puts("Received a message from a node");
-            send_data_to_pc(arg, res);
+
+            if (connection_to_pc)
+            {
+                send_data_to_pc(res);
+            }
         }
     }
 }
 
+
+
+
 //Method to receive Data from the PC
 int* receive_update(void* arg)
 {
-    puts("Udp_Server start for PC");
 
     (void)arg;
 
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
-    local.port = pc_server_port;
+    local.port = pc_client_port;
     sock_udp_t sock;
 
     if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
@@ -119,13 +135,61 @@ int* receive_update(void* arg)
 
     while (1) {
         sock_udp_ep_t remote;
-        ssize_t res;
-        if ((res = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf) - 1, SOCK_NO_TIMEOUT,
-                 &remote))
-            > 0) {
-            puts("Received a message");
+        size_t res;
 
-            send_update(res);
-        }
+        res = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf) , SOCK_NO_TIMEOUT, &remote);
+
+        if (res > 0) 
+        {
+            puts("Udp_Server start for PC");
+
+            server = remote;
+
+            connection_to_pc = true;
+    
+
+        while (1)
+        {   
+            if ((res = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf) , SOCK_NO_TIMEOUT, &remote)) > 0) 
+            {
+                
+                newfp = fopen("update.elf","wb");
+
+                if(newfp==NULL)
+                {
+                    printf("error opening the file\n");
+                    return 0;
+                }
+
+
+                packets = atoi(pc_buf);
+                printf("Num packets expected: %d\n", packets);
+
+                while(received<packets)
+                {
+                    size_t res2 = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf) , SOCK_NO_TIMEOUT, &remote);
+
+                    if (res2 <= 0)
+                    {
+                        printf("Failed to get Data from file");
+                        return 0;
+                    }
+
+                    if((fwrite(pc_buf,1,res2,newfp)) < res2)
+                    {
+                        printf("error in writing to the file\n");
+                        return 0;
+                    }
+                    printf("%d\n",received);
+                    received++;
+                }
+
+                printf("Got the data from the pc\n");
+
+                fclose(newfp);
+
+            }   
+        }   
     }
 }
+}   

@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #define PORT 5555
-#define PORTREMOTE 8888
+#define PORTREMOTE 6666
 #define SIZE 1024
 
 // Driver code

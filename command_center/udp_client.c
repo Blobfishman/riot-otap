@@ -11,12 +11,12 @@
 #include <unistd.h>
 
 #define PORT 6666
-#define SIZE 500
+#define SIZE 512
 
-
+int n = 0;
 int main(int argc, char* argv[])
 {     
-    if (argc != 3) {
+    if (argc != 4) {
     	printf("Usage: ./client <ipv6-adress-node> <interface-name> <abs-path-to-update>");
         return -1;
     }
@@ -31,7 +31,16 @@ int main(int argc, char* argv[])
      fseek(fptr,0, SEEK_END);
      size_t file_size = ftell(fptr);
      fseek(fptr,0, SEEK_SET);
-     int packets = (file_size/500) +1;
+
+     int packets = 0;
+
+     if ((file_size/512) % 2 == 0) 
+     {
+        packets = (file_size/512);
+     }
+     else {
+        packets = (file_size/512) +1;
+     }
 
     
     int sockfd;
@@ -44,7 +53,7 @@ int main(int argc, char* argv[])
         return -1;
     }
     //bind socket to interface
-    const char* interface_name = argv[3];
+    const char* interface_name = argv[2];
     if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen(interface_name)) < 0) {
         perror("Binding to interface failed,try to run as root");
     }
@@ -62,7 +71,9 @@ int main(int argc, char* argv[])
     int n, len;
     
     //send amount of packets to client
+    
     sprintf(buffer, "%d",packets);
+    printf("%s\n",buffer);
     sendto(sockfd,buffer, SIZE,
         0, (const struct sockaddr*)&servaddr,
         sizeof(servaddr));
@@ -78,12 +89,21 @@ int main(int argc, char* argv[])
 		return -1;
 		}	 
     	}
+        
+        printf("%d %d\n",n,byte_read);
+        n++;
+        usleep(4200);
+
+    if(byte_read > 0)
+    {
+
 	//send chuncked packets
 	sendto(sockfd,buffer, byte_read,
         0, (const struct sockaddr*)&servaddr,
         sizeof(servaddr));
     	
     }
+   }
 
     close(sockfd);
     fclose(fptr);
