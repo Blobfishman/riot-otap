@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<topology version="1">
+    <net description="Prototype star topology with one gateway and  " name="star6">
+        <nodeTypes>
+            <nodeType name="riot_native">
+                <interfaces>
+                    <interface name="radio0" type="802.15"/>
+                </interfaces>
+            </nodeType>
+        </nodeTypes>
+        <nodes>
+            <node binary="../gateway/bin/native/gateway.elf" name="g1" type="riot_native"/>
+            <node binary="../node/bin/native/node.elf" name="c1" type="riot_native"/>
+            <node binary="../node/bin/native/node.elf" name="c2" type="riot_native"/>
+            <node binary="../node/bin/native/node.elf" name="c3" type="riot_native"/>
+            <node binary="../node/bin/native/node.elf" name="c4" type="riot_native"/>
+            <node binary="../node/bin/native/node.elf" name="c5" type="riot_native"/>
+        </nodes>
+        <links>
+            <link broadcast_loss="0.0" from_if="radio0" from_node="g1" loss="0.0" to_if="radio0" to_node="c1" uni="false"/>
+            <link broadcast_loss="0.0" from_if="radio0" from_node="g1" loss="0.0" to_if="radio0" to_node="c2" uni="false"/>
+            <link broadcast_loss="0.0" from_if="radio0" from_node="g1" loss="0.0" to_if="radio0" to_node="c3" uni="false"/>
+            <link broadcast_loss="0.0" from_if="radio0" from_node="g1" loss="0.0" to_if="radio0" to_node="c4" uni="false"/>
+            <link broadcast_loss="0.0" from_if="radio0" from_node="g1" loss="0.0" to_if="radio0" to_node="c5" uni="false"/>
+        </links>
+    </net>
+</topology>
