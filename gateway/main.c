@@ -17,12 +17,14 @@ static const shell_command_t commands[] = {
 int main(void)
 {
 
+    puts("starting node thread");
     thread_create(server_stack_note, sizeof(server_stack_note),
         THREAD_PRIORITY_MAIN - 1,
         THREAD_CREATE_STACKTEST,
         receive_data,
         NULL, "receive_data");
 
+    puts("starting pc thread");
     thread_create(server_stack_pc, sizeof(server_stack_pc),
         THREAD_PRIORITY_MAIN - 1,
         THREAD_CREATE_STACKTEST,

@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
     local_addr.sin6_addr = in6addr_any;
 
     //bind socket to adress
+    printf("bin socket to address");
     if (bind(socketfd, (struct sockaddr*)&local_addr,
             sizeof(local_addr))
         < 0) {
@@ -41,7 +42,7 @@ int main(int argc, char* argv[])
     }
 
     int len = sizeof(remote_addr);
-    
+
     const char* interface_name = argv[2];
     if (setsockopt(socketfd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen(interface_name)) < 0) {
         perror("Binding to interface failed,try to run as root");
@@ -57,14 +58,17 @@ int main(int argc, char* argv[])
 
     remote_addr.sin6_family = AF_INET6;
     remote_addr.sin6_port = htons(PORTREMOTE);
-    
-    sendto(socketfd,"I am the server", strlen("I am the server"),
-        0, (const struct sockaddr*)&remote_addr,
-        sizeof(remote_addr));
+
+    printf("sending msg");
+    if (sendto(socketfd, "I am the server", strlen("I am the server"),
+            0, (const struct sockaddr*)&remote_addr,
+            sizeof(remote_addr))
+        == -1) {
+        printf("failed to send msg");
+    }
     //clear buffer
     memset(buffer, 0, SIZE);
-   
-    
+
     while (1) {
         //wait for message
         int size = recvfrom(socketfd, (char*)buffer, SIZE,

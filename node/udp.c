@@ -39,28 +39,16 @@ void* udp_client(void* arg)
     }
 
     char data = 0;
+    sock_udp_ep_t network_devices = { .family = AF_INET6 };
+    network_devices.port = server_port;
+    ipv6_addr_set_all_nodes_multicast((ipv6_addr_t*)&network_devices.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
     while (1) {
-        ssize_t res;
         data = app();
 
-        if (sock_udp_send(&sock, &data, sizeof(data), &router) < 0) {
+        puts("sending message");
+        if (sock_udp_send(&sock, &data, sizeof(data), &network_devices) < 0) {
             puts("Error sending message");
             return NULL;
-        }
-        if ((res = sock_udp_recv(&sock, client_buffer, sizeof(client_buffer), 1 * US_PER_SEC,
-                 NULL))
-            < 0) {
-            if (res == -ETIMEDOUT) {
-                puts("Timed out client");
-            } else {
-                puts("Error receiving message");
-            }
-        } else {
-            printf("Received message: \"");
-            for (int i = 0; i < res; i++) {
-                printf("%c", client_buffer[i]);
-            }
-            printf("\"\n");
         }
         xtimer_sleep(1);
     }
@@ -76,7 +64,7 @@ void* udp_server(void* arg)
     // need to receive update
     int packets = 0;
     int received = 0;
-    FILE *newfp;
+    FILE* newfp;
 
     // lokale addresse IPV6 und server port
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
@@ -97,8 +85,8 @@ void* udp_server(void* arg)
         size_t res;
         // empfange pakete
         if ((res = sock_udp_recv(&sock, server_buffer, sizeof(server_buffer),
-                SOCK_NO_TIMEOUT,
-                &remote))
+                 SOCK_NO_TIMEOUT,
+                 &remote))
             > 0) {
             // client starten oder update simulieren
             if (atoi((char*)server_buffer) == 10 && !running) {
@@ -124,42 +112,36 @@ void* udp_server(void* arg)
                     app = &app1;
                 }
                 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-                
-                newfp = fopen("update.elf","wb");
 
-                if(newfp==NULL)
-                {
+                newfp = fopen("update.elf", "wb");
+
+                if (newfp == NULL) {
                     printf("error opening the file\n");
                     return 0;
                 }
 
-
                 packets = atoi(server_buffer);
                 printf("Num packets expected: %d\n", packets);
 
-                while(received<packets)
-                {
-                    size_t res2 = sock_udp_recv(&sock, server_buffer, sizeof(server_buffer) , SOCK_NO_TIMEOUT, &remote);
+                while (received < packets) {
+                    size_t res2 = sock_udp_recv(&sock, server_buffer, sizeof(server_buffer), SOCK_NO_TIMEOUT, &remote);
 
-                    if (res2 <= 0)
-                    {
+                    if (res2 <= 0) {
                         printf("Failed to get Data from file");
                         return 0;
                     }
 
-                    if((fwrite(server_buffer,1,res2,newfp)) < res2)
-                    {
+                    if ((fwrite(server_buffer, 1, res2, newfp)) < res2) {
                         printf("error in writing to the file\n");
                         return 0;
                     }
-                    printf("%d\n",received);
+                    printf("%d\n", received);
                     received++;
                 }
 
                 printf("Got the data from the server\n");
 
                 fclose(newfp);
-
             }
         } else {
             puts("Error beim empfangen");
