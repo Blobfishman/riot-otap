@@ -34,19 +34,13 @@ int main(int argc, char* argv[])
 
      int packets = 0;
 
-     if ((file_size/512) % 2 == 0) 
-     {
-        packets = (file_size/512);
-     }
-     else {
-        packets = (file_size/512) +1;
-     }
+     packets = (int)((file_size / 512) + 1);
 
     
     int sockfd;
     char buffer[SIZE];
     struct sockaddr_in6 servaddr;
-
+    printf("packet amount : %d \n",packets);
     // socket creation
     if ((sockfd = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
         perror("socket creation failed");
@@ -90,13 +84,13 @@ int main(int argc, char* argv[])
 		}	 
     	}
         
-        printf("%d %d\n",n,byte_read);
-        n++;
+       
         usleep(4200);
 
     if(byte_read > 0)
     {
-
+	printf("%d %d\n",n,byte_read);
+        n++;
 	//send chuncked packets
 	sendto(sockfd,buffer, byte_read,
         0, (const struct sockaddr*)&servaddr,

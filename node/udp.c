@@ -113,7 +113,7 @@ void* udp_server(void* arg)
                 }
                 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-                newfp = fopen("update.elf", "wb");
+                newfp = fopen("update1.elf", "wb");
 
                 if (newfp == NULL) {
                     printf("error opening the file\n");
