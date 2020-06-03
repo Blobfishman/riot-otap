@@ -114,15 +114,15 @@ int send_update(void* arg)
 
             //send chuncked packets
 
-     if (sock_udp_send(&sock, buffer, sizeof(buffer) -1, &remote) < 0) 
-    {
-        puts("Error sending chunked packages");
-        sock_udp_close(&sock);
-        return 1;
+            if (sock_udp_send(&sock, buffer, sizeof(buffer) - 1, &remote) < 0) {
+                puts("Error sending chunked packages");
+                sock_udp_close(&sock);
+                return 1;
+            }
+
+            fclose(fptr);
+        }
     }
-
-    fclose(fptr);
-
     sock_udp_close(&sock);
     return 0;
 }
@@ -156,7 +156,7 @@ void* receive_data(void* arg)
     while (1) {
         sock_udp_ep_t remote;
         ssize_t res;
-        if ((res = sock_udp_recv(&sock, buf, sizeof(buf) -1, SOCK_NO_TIMEOUT, &remote)) > 0) {
+        if ((res = sock_udp_recv(&sock, buf, sizeof(buf) - 1, SOCK_NO_TIMEOUT, &remote)) > 0) {
             puts("Received a message from a node");
 
             if (connection_to_pc) {
@@ -186,7 +186,7 @@ int* receive_update(void* arg)
         sock_udp_ep_t remote;
         size_t res;
 
-        res = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf) -1, SOCK_NO_TIMEOUT, &remote);
+        res = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf) - 1, SOCK_NO_TIMEOUT, &remote);
 
         if (res > 0) {
             puts("Udp_Server start for PC");
@@ -195,12 +195,10 @@ int* receive_update(void* arg)
 
             connection_to_pc = true;
 
-        while (1)
-        {   
-            if ((res = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf), SOCK_NO_TIMEOUT, &remote)) > 0) 
-            {
-                
-                newfp = fopen("update.elf","wb");
+            while (1) {
+                if ((res = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf), SOCK_NO_TIMEOUT, &remote)) > 0) {
+
+                    newfp = fopen("update.elf", "wb");
 
                     newfp = fopen("update.elf", "wb");
 
@@ -215,9 +213,8 @@ int* receive_update(void* arg)
                     packets = atoi(pc_buf);
                     printf("Num packets expected: %d\n", packets);
 
-                while(received<=packets)
-                {
-                    size_t res2 = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf)  , SOCK_NO_TIMEOUT, &remote);
+                    while (received <= packets) {
+                        size_t res2 = sock_udp_recv(&sock, pc_buf, sizeof(pc_buf), SOCK_NO_TIMEOUT, &remote);
 
                         if (res2 <= 0) {
                             printf("Failed to get Data from file");
@@ -236,9 +233,9 @@ int* receive_update(void* arg)
 
                     fclose(newfp);
 
-                //send_update(arg);
-
-            }   
-        }   
+                    send_update(arg);
+                }
+            }
+        }
     }
 }
