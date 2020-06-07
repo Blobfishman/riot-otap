@@ -5,25 +5,17 @@
 #include "net/ipv6/addr.h"
 #include "net/sock/udp.h"
 #include "xtimer.h"
-// #include "fmt.h"
 
 static char client_stack[THREAD_STACKSIZE_DEFAULT];
 // buffer fuer die empfangenen daten
 char server_buffer[512];
-uint8_t client_buffer[128];
-uint16_t server_port = 8888;
-uint16_t client_port = 7777;
+const uint16_t server_port = 8888;
+const uint16_t client_port = 7777;
 
 sock_udp_ep_t router;
 
-extern char app1(void);
-extern char app2(void);
-
-char (*app)(void);
-
 void* udp_client(void* arg)
 {
-
     (void)arg;
 
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
@@ -34,7 +26,7 @@ void* udp_client(void* arg)
     // erstelle den socket mit IPV6 addr und port
     // die client addresse kann auf NULL gesetzt werden
     if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
-        puts("Error: sock konnte nicht erstellt werden");
+        printf("Error: sock konnte nicht erstellt werden");
         return NULL;
     }
 
@@ -45,9 +37,9 @@ void* udp_client(void* arg)
     while (1) {
         data = app();
 
-        puts("sending message");
+        printf("sending message");
         if (sock_udp_send(&sock, &data, sizeof(data), &network_devices) < 0) {
-            puts("Error sending message");
+            printf("Error sending message");
             return NULL;
         }
         xtimer_sleep(1);
@@ -56,8 +48,7 @@ void* udp_client(void* arg)
 
 void* udp_server(void* arg)
 {
-
-    puts("start udp_server");
+    printf("start udp_server");
     bool running = false;
     (void)arg;
 
@@ -75,7 +66,7 @@ void* udp_server(void* arg)
     // erstelle den socket mit IPV6 addr und port
     // die client addresse kann auf NULL gesetzt werden
     if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
-        puts("Error: sock konnte nicht erstellt werden");
+        printf("Error: sock konnte nicht erstellt werden");
         return NULL;
     }
 
@@ -90,7 +81,7 @@ void* udp_server(void* arg)
             > 0) {
             // client starten oder update simulieren
             if (atoi((char*)server_buffer) == 10 && !running) {
-                puts("starte Client");
+                printf("starte Client");
                 running = true;
                 app = &app1;
                 // router ip und port setzen
@@ -103,16 +94,7 @@ void* udp_server(void* arg)
                     udp_client,
                     NULL, "udp_client");
             } else {
-                puts("update");
-
-                //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-                if (app == &app1) {
-                    app = &app2;
-                } else {
-                    app = &app1;
-                }
-                //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+                printf("update");
                 newfp = fopen("update1.elf", "wb");
 
                 if (newfp == NULL) {
@@ -144,7 +126,7 @@ void* udp_server(void* arg)
                 fclose(newfp);
             }
         } else {
-            puts("Error beim empfangen");
+            printf("Error beim empfangen");
         }
     }
 

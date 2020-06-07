@@ -31,6 +31,8 @@
 *.out
 *.app
 
+%*
+
 # bin and tags
 */bin/*
 tags
