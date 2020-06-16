@@ -16,8 +16,8 @@
 int n = 0;
 int main(int argc, char* argv[])
 {     
-    if (argc != 4) {
-    	printf("Usage: ./client <ipv6-adress-node> <interface-name> <abs-path-to-update>");
+    if (argc != 6) {
+    	printf("Usage: ./client <ipv6-adress-node> <interface-name> <abs-path-to-update> <software_version> <software-id>");
         return -1;
     }
      //open file
@@ -64,16 +64,33 @@ int main(int argc, char* argv[])
     servaddr.sin6_port = htons(PORT);
     int n, len;
     
-    //send amount of packets to client
+    //send advertisement package
+    buffer[0] = 'A';
+    strcpy(buffer+1,argv[4]);
+    strcpy(buffer+9,argv[5]);
     
-    sprintf(buffer, "%d",packets);
     printf("%s\n",buffer);
     sendto(sockfd,buffer, SIZE,
         0, (const struct sockaddr*)&servaddr,
         sizeof(servaddr));
     //clear buffer
     memset(buffer, 0, SIZE);
-    
+
+
+    // send update advertisement package
+    buffer[0] = 'U';
+    buffer[1] = '0';
+    snprintf(buffer+2,500,"%d",SIZE);
+    //strcpy(buffer+5,  packets);
+    snprintf(buffer+5,500,"%d",packets);
+    printf("%s\n",buffer);
+
+    sendto(sockfd,buffer, SIZE,
+        0, (const struct sockaddr*)&servaddr,
+        sizeof(servaddr));
+    //clear buffer
+    memset(buffer, 0, SIZE);
+
    //read and send file 
    while(!feof(fptr)) {
     	int byte_read =	fread(buffer,1,SIZE,fptr);
